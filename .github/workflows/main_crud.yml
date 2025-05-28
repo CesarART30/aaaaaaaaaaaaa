@@ -1,3 +1,6 @@
+# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
+# Más información sobre Python y GitHub Actions para Azure: https://aka.ms/python-webapps-actions
+
 name: Build and deploy Python app to Azure Web App - crud
 
 on:
@@ -7,55 +10,30 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout código del repositorio
+        uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Configurar Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'  # Usa una versión estable compatible con Azure
+          python-version: '3.13'  # Cambia esto si usas otra versión de Python
 
-      - name: Install dependencies
+      - name: Instalar dependencias
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Archive project files
+      - name: Empaquetar aplicación para despliegue
         run: |
-          zip -r release.zip . -x venv/\* .venv/\* \*.git\* \*__pycache__\* \*.pytest_cache\*
+          zip -r app.zip . -x \"venv/*\" \"__pycache__/*\" \".git/*\" \".github/*\"
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: python-app
-          path: release.zip
-
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build
-    environment:
-      name: 'Production'
-      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
-
-    steps:
-      - name: Download artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: python-app
-
-      - name: Extract artifact
-        run: unzip release.zip
-
-      - name: Deploy to Azure Web App
+      - name: Desplegar a Azure Web App
         uses: azure/webapps-deploy@v3
-        id: deploy-to-webapp
         with:
-          app-name: 'crud'
-          slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_45AA9267D2A74512B463CF23615A610A }}
-          package: .
+          app-name: 'registroClientes'  # Nombre exacto de tu App Service en Azure
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_395FA7371D9C480F8E53002FF0C0A3D4 }}
+          package: app.zip
